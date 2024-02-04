@@ -1,43 +1,26 @@
-from langchain_google_genai import ChatGoogleGenerativeAI
-from tools import tools
-from langchain import hub
-from langchain_openai import ChatOpenAI
-from langchain.agents import AgentType, initialize_agent, AgentExecutor, create_structured_chat_agent
-from langchain.memory import MongoDBChatMessageHistory
-import os
-from dotenv import load_dotenv
+from flask import Flask, request
+import random
+from chatbot import chatbot
 
+app = Flask(__name__)
 
-load_dotenv()
-def chatbot(session_id,user_input):
-    gemini_llm = ChatGoogleGenerativeAI(model='gemini-pro', verbose=True, temperature=0)
-    gpt_llm = ChatOpenAI(temperature=0, model="gpt-3.5-turbo-0613")
+@app.route('/', methods=['POST'])
+def dummy_route():
+    responses = ["Hello!", "Welcome to the dummy route!", "Flask is fun!", "Random text here!"]
+    return random.choice(responses)
 
-    uri = os.getenv('MONGODB_CONNECTION_STRING')
-    message_history = MongoDBChatMessageHistory(
-        connection_string=uri, session_id=session_id, collection_name= "Chats"
-    )
-    
-    prompt = hub.pull("hwchase17/structured-chat-agent")
-    print(f"Prompt: {prompt}")
+@app.route('/chatbot', methods=['POST'])
+def chat():
+    try:
+        request_data = request.get_json()
 
-    chat_agent = create_structured_chat_agent(llm=gpt_llm, tools=tools, prompt=prompt)
-    agent_executor = AgentExecutor.from_agent_and_tools(
-            agent=chat_agent, 
-            tools=tools, 
-            verbose=True, 
-            handle_parsing_errors=True,
-            return_intermediate_steps=True,
-    )
+        session_id = request_data.get("session_id")
+        message = request_data.get("message")
 
-    response = agent_executor.invoke(
-                {
-                    "input": f"{user_input}",
-                    "chat_history": message_history
-                }
-            )
-    message_history.add_user_message(user_input)
-    message_history.add_ai_message(response.output)
-    return response.output
+        response = chatbot(session_id=session_id, user_input=message, llm='Gemini')
+        return {"output": response}
+    except Exception as e:
+        return [], 500
 
-print(chatbot("1222", "Hello my name is Bob"))
+if __name__ == '__main__':
+    app.run(debug=True, port=5555)

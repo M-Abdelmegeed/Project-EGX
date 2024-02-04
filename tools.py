@@ -14,7 +14,7 @@ def searchGoogle(input:str) -> str:
 
 @tool("stock_price", return_direct=False)
 def getStockPrice(symbol:str) -> str:
-    """Useful for when you need to find out the price of stock that is not in EGX. You should input the stock ticker used on the yfinance API"""
+    """Useful for when you need to find out the price of a stock. You should input the stock ticker used on the yfinance API"""
     ticker = yf.Ticker(symbol)
     todays_data = ticker.history(period='1d')
     return round(todays_data['Close'].iloc[0], 2)
