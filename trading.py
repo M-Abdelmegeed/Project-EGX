@@ -1,7 +1,7 @@
 from tradingview_ta import TA_Handler, Exchange, Interval
 import json
 
-json_filename = 'egx_stock_data.json'
+json_filename = 'EGX Stock data/egx_stock_data.json'
 with open(json_filename, 'r', encoding='utf-8') as json_file:
     data = json.load(json_file)
     

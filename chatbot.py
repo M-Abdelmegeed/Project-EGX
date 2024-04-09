@@ -2,6 +2,7 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from tools import tools
 from langchain import hub
 from langchain_openai import ChatOpenAI
+from langchain_community.chat_models import ChatOllama
 from langchain.agents import AgentExecutor, create_structured_chat_agent
 from langchain.memory import MongoDBChatMessageHistory, ConversationSummaryBufferMemory
 import os
@@ -10,9 +11,10 @@ from dotenv import load_dotenv
 
 load_dotenv()
 def chatbot(session_id,user_input,llm):
-    """ The LLM parameter is either 'GPT-3.5' or 'Gemini' """
+    """ The LLM parameter is either 'GPT-3.5' or 'Gemini' or 'Ollama' """
     gemini_llm = ChatGoogleGenerativeAI(model='gemini-pro', verbose=True, temperature=0, convert_system_message_to_human=True)
     gpt_llm = ChatOpenAI(temperature=0, model="gpt-3.5-turbo-0613")
+    open_source_llm = ChatOllama(model="llama2",verbose=True ,temperature=0)
 
     uri = os.getenv('MONGODB_CONNECTION_STRING')
     message_history = MongoDBChatMessageHistory(
@@ -29,7 +31,7 @@ def chatbot(session_id,user_input,llm):
     )
     print(summarized_memory)
     
-    prompt = hub.pull("abdelmegeed/chat_agent")
+    prompt = hub.pull("abdelmegeed/project-egx-chatbot")
     print(f"Prompt: {prompt}")
 
     
@@ -37,6 +39,8 @@ def chatbot(session_id,user_input,llm):
         chat_agent = create_structured_chat_agent(llm=gpt_llm, tools=tools, prompt=prompt)  
     elif(llm=="Gemini"):
         chat_agent = create_structured_chat_agent(llm=gemini_llm, tools=tools, prompt=prompt)
+    elif(llm=="Ollama"):
+        chat_agent = create_structured_chat_agent(llm=open_source_llm, tools=tools, prompt=prompt)
         
     agent_executor = AgentExecutor.from_agent_and_tools(
             agent=chat_agent, 
@@ -60,3 +64,5 @@ def chatbot(session_id,user_input,llm):
     else:
         message_history.add_ai_message(response['output'])
         return response['output']
+    
+print(chatbot('12782', "What are DOMT's stock technicals in EGX?", 'Gemini'))
