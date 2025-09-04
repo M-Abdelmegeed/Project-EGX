@@ -1,29 +1,47 @@
-from flask import Flask, request
-from flask_cors import CORS
+from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
 import random
 from chatbot import chatbot
 
-app = Flask(__name__)
-CORS(app, resources={r"/*": {"origins": "*"}})
+app = FastAPI()
 
-@app.route('/', methods=['POST'])
-def dummy_route():
-    responses = ["Hello!", "Welcome to the dummy route!", "Flask is fun!", "Random text here!"]
+# Allow CORS for all origins
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # allow all origins
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# --- Request Schema ---
+class ChatRequest(BaseModel):
+    session_id: str
+    message: str
+
+# --- Routes ---
+@app.get("/")
+async def dummy_route():
+    responses = [
+        "Hello!",
+        "Welcome to the dummy route!",
+        "FastAPI is fun!",
+        "Random text here!"
+    ]
     return random.choice(responses)
 
-@app.route('/chatbot', methods=['POST'])
-def chat():
+@app.get("/ping")
+async def ping():
+    return "pong"
+
+@app.post("/chatbot")
+async def chat(request: ChatRequest):
     try:
-        request_data = request.get_json()
-        print(request_data)
-
-        session_id = request_data.get("session_id")
-        message = request_data.get("message")
-
-        response = chatbot(session_id=session_id, user_input=message, llm='Gemini')
+        response = chatbot(session_id=request.session_id, user_input=request.message, llm="Groq")
         return {"output": response}
     except Exception as e:
-        return e, 500
+        print(e)
+        return {"error": str(e)}, 500
 
-if __name__ == '__main__':
-    app.run(debug=True, port=5555)
+# Run with: uvicorn app:app --reload --port 3333

@@ -1,28 +1,12 @@
-from langchain.tools import BaseTool, StructuredTool, Tool, tool
+from langchain.tools import tool
 from langchain_community.tools.tavily_search import TavilySearchResults
 from langchain_community.utilities import GoogleSerperAPIWrapper
 from tradingview_ta import TA_Handler, Exchange, Interval
-from serpapi import GoogleSearch
-import random
 import yfinance as yf
 import os
 from dotenv import load_dotenv
 
-# os.environ["SERPAPI_API_KEY"] = os.getenv('SERPAPI_API_KEY')
 load_dotenv()
-# Has no EGX data
-# @tool("google_search", return_direct=False)
-# def searchGoogleFinance(input:str) -> str:
-#     """Useful when you need to search the web to find fundamentals about stocks. Input must be like the following EGX:{stock_ticker}"""
-#     serp_api_key = os.getenv("SERP_KEY")
-#     params = {
-#     "engine": "google_finance",
-#     "q": input,
-#     "api_key":serp_api_key
-#     }
-#     search = GoogleSearch(params)
-#     results = search.get_dict()
-#     return results
 
 @tool("google_search", return_direct=True)
 def searchGoogle(input:str) -> str:
@@ -63,3 +47,4 @@ tools = [getStockDataEGX, getStockPriceEGX]
 
 # print(getStockDataEGX('FWRY'))
 # print(searchGoogleFinance('AAPL:NYSE'))
+# print(searchGoogle("AAPL:NYSE"))
